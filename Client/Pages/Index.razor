@@ -1,0 +1,91 @@
+﻿@page "/"
+@using System.Collections.ObjectModel
+@using System.ComponentModel
+@using Syncfusion.Blazor.Buttons
+
+<div style="margin: 0 0 7px 7px">
+    <SfButton @onclick="AddNewCard">Add Card</SfButton>
+    <SfButton @onclick="UpdateCard">Update Card</SfButton>
+    <SfButton @onclick="DeleteCard">Delete Card</SfButton>
+</div>
+
+<SfKanban DataSource="@observableData" KeyField="Status">
+    <KanbanColumns>
+        <KanbanColumn HeaderText="To Do" KeyField="@(new List<string>() {"Open"})"></KanbanColumn>
+        <KanbanColumn HeaderText="In Progress" KeyField="@(new List<string>() {"InProgress"})"></KanbanColumn>
+        <KanbanColumn HeaderText="Testing" KeyField="@(new List<string>() {"Testing"})"></KanbanColumn>
+        <KanbanColumn HeaderText="Done" KeyField="@(new List<string>() {"Close"})"></KanbanColumn>
+    </KanbanColumns>
+    <KanbanCardSettings HeaderField="Id" ContentField="Summary"></KanbanCardSettings>
+</SfKanban>
+
+@code {
+    public List<TaskModel> TaskDetails { get; set; }
+    public ObservableCollection<TaskModel> observableData = new ObservableCollection<TaskModel>();
+    public class TaskModel : INotifyPropertyChanged
+    {
+        public string Id { get; set; }
+        public string StatusChanged { get; set; }
+        public string Status
+        {
+            get { return StatusChanged; }
+            set
+            {
+                this.StatusChanged = value;
+                NotifyPropertyChanged("Status");
+            }
+        }
+        public string Summary { get; set; }
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void NotifyPropertyChanged(string PropertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(PropertyName));
+            }
+        }
+    }
+
+    private int AddUniqueId { get; set; }
+    public async Task AddNewCard()
+    {
+        var TaskId = "Task 10000" + ++AddUniqueId;
+        await Task.Delay(100);
+        observableData.Add(new TaskModel() { Id = TaskId, Status = "Open", Summary = "Improve application performance" });
+    }
+
+    private int UpdateUniqueId { get; set; }
+    public async Task UpdateCard()
+    {
+        if (observableData.Any())
+        {
+            var updateId = ++UpdateUniqueId;
+            var data = observableData[updateId];
+            await Task.Delay(100);
+            data.Summary = "Card Updated";
+            data.Status = "Testing";
+        }
+    }
+
+    public async Task DeleteCard()
+    {
+        if (observableData.Any())
+        {
+            await Task.Delay(100);
+            observableData.Remove(observableData.First());
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        TaskDetails = Enumerable.Range(1, 20).Select(x => new TaskModel()
+            {
+                Id = "Task 1000" + x,
+                Status = (new string[] { "Open", "In Progress", "Testing", "Close" })[new Random().Next(4)],
+                Summary = (new string[] { "Analyze the new requirements gathered from the customer.", "Improve application performance",
+                "Fix the issues reported in the IE browser.", "Validate new requirements", "Test the application in the IE browser." })
+                    [new Random().Next(5)],
+            }).ToList();
+        observableData = new ObservableCollection<TaskModel>(TaskDetails);
+    }
+}
